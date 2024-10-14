@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Injection Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+        }
+        .form-container {
+            width: 40%;
+            border: 2px solid #ccc;
+            padding: 50px;
+            border-radius: 10px;
+        }
+        h2 {
+            text-align: center;
+        }
+        input {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+        }
+        .submit-button {
+            background-color: #007BFF;
+            width: 40%;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Vulnerable Login Form -->
+    <div class="form-container">
+        <h2>Vulnerable Login (SQL Injection Possible)</h2>
+        <form action="/vulnerable_login" method="post">
+            <label for="username_vuln">Username:</label>
+            <input type="text" id="username_vuln" name="username_vuln">
+            
+            <label for="password_vuln">Password:</label>
+            <input type="text" id="password_vuln" name="password_vuln">
+            
+            <input type="submit" value="Login" class="submit-button">
+        </form>
+    </div>
+
+    <!-- Secure Login Form -->
+    <div class="form-container">
+        <h2>Secure Login (Protected from SQL Injection)</h2>
+        <form action="/secure_login" method="post">
+            <label for="username_secure">Username:</label>
+            <input type="text" id="username_secure" name="username_secure">
+            
+            <label for="password_secure">Password:</label>
+            <input type="text" id="password_secure" name="password_secure">
+            
+            <input type="submit" value="Login" class="submit-button">
+        </form>
+    </div>
+
+</body>
+</html>

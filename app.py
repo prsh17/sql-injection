@@ -1,21 +1,24 @@
-from flask import Flask, request, g
+from flask import Flask, request, g, render_template
 import sqlite3
 
 app = Flask(__name__)
 DATABASE = 'test.db'
 
+# Function to get a database connection
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
     return db
 
+# Close the database connection after the request
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
+# Initialize the database (run once at start)
 def init_db():
     with app.app_context():
         db = get_db()
@@ -25,93 +28,48 @@ def init_db():
         cursor.execute("INSERT INTO users (username, password) VALUES ('user', 'mypassword')")
         db.commit()
 
-@app.route('/')
+# Route for home page showing both forms
+@app.route('/page')
 def index():
-    return '''
-     <html>
-    <head>
-        <style>
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background-color: #f2f2f2;
-                margin: 0;
-                font-family: Arial, sans-serif;
-            }
-            .login-container {
-                background: #fff;
-                padding: 20px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                border-radius: 8px;
-                text-align: center;
-            }
-            .login-container h1 {
-                margin-bottom: 20px;
-            }
-            .form-group {
-                margin-bottom: 15px;
-                text-align: left;
-            }
-            .form-group label {
-                display: inline-block;
-                width: 100px;
-                text-align: right;
-            }
-            .form-group input {
-                padding: 10px;
-                width: calc(100% - 120px);
-                margin-left: 10px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-            }
-            .login-container input[type="submit"] {
-                padding: 10px 20px;
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            .login-container input[type="submit"]:hover {
-                background-color: #45a049;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="login-container">
-            <h1>Login</h1>
-            <form action="/login" method="post">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password">
-                </div>
-                <input type="submit" value="Login">
-            </form>
-        </div>
-    </body>
-    </html>
-    '''
+    return render_template('index.html')
 
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
-    password = request.form['password']
+# Vulnerable Login (SQL Injection Possible)
+@app.route('/vulnerable_login', methods=['POST'])
+def vulnerable_login():
+    username = request.form['username_vuln']
+    password = request.form['password_vuln']
     db = get_db()
     cursor = db.cursor()
+    
+    # Vulnerable SQL query without parameterization
     query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
     cursor.execute(query)
     user = cursor.fetchone()
+    
     if user:
-        return "Login successful!"
+        return "<h1>Vulnerable Login: Login successful!</h1>"
     else:
-        return "Invalid credentials!"
+        return "<h1>Vulnerable Login: Invalid credentials!</h1>"
 
+# Secure Login (Protected from SQL Injection)
+@app.route('/secure_login', methods=['POST'])
+def secure_login():
+    username = request.form['username_secure']
+    password = request.form['password_secure']
+    db = get_db()
+    cursor = db.cursor()
+
+    # Secure SQL query with parameterization
+    query = "SELECT * FROM users WHERE username=? AND password=?"
+    cursor.execute(query, (username, password))
+    user = cursor.fetchone()
+    
+    if user:
+        return "<h1>Secure Login: Login successful!</h1>"
+    else:
+        return "<h1>Secure Login: Invalid credentials!</h1>"
+
+# Initialize the database when the script runs
 if __name__ == '__main__':
-    init_db()
+    init_db()  # Make sure the database is initialized
     app.run(debug=True)
